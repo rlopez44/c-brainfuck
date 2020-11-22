@@ -69,7 +69,7 @@ char *read_line(char **line, size_t *size, FILE *file)
 }
 
 // load file into memory
-char ***load_file(char **lines[], size_t *lines_size, FILE *file)
+char **load_file(char **lines[], size_t *lines_size, FILE *file)
 {
     // temp pointer to use when reallocating
     char **tmp_lines = NULL;
@@ -154,6 +154,6 @@ char ***load_file(char **lines[], size_t *lines_size, FILE *file)
     tmp_lines = NULL;
     *lines_size = num_lines_stored;
 
-    return lines;
+    return *lines;
 
 }
