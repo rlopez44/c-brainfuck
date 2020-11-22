@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include "utils.h"
 
 char *read_line(char **line, size_t *size, FILE *file)
 {
