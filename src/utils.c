@@ -1,14 +1,13 @@
-#include <stdio.h>
 #include <string.h>
-#include <stdlib.h>
 #include "utils.h"
 
-char *read_line(char **line, size_t *size, FILE *file)
+static char *read_line(char **line, size_t *size, FILE *file)
 {
     // temp pointer to use when reallocating
     char *tmp_line = NULL;
 
-    const size_t baseline_buffer_length = 1 << 8; // 4096
+    // TODO: fix bug where not all lines are read when *line requires realloc
+    const size_t baseline_buffer_length = 1 << 8; // 256
 
     // fixed-size buffer for use with fgets
     char buffer[baseline_buffer_length + 1];
@@ -68,36 +67,62 @@ char *read_line(char **line, size_t *size, FILE *file)
     }
 }
 
+static bf_source_object *create_source_object(void)
+{
+    bf_source_object *source = malloc(sizeof(bf_source_object));
+
+    if (source == NULL)
+    {
+        return NULL;
+    }
+
+    source->lines = NULL;
+    source->num_lines = 0;
+
+    return source;
+}
+
+void free_source_object(bf_source_object *source)
+{
+    for (size_t i = 0; i < source->num_lines; ++i)
+    {
+        free((source->lines)[i]);
+    }
+    free(source->lines);
+    free(source);
+}
+
 // load file into memory
-char **load_file(char **lines[], size_t *lines_size, FILE *file)
+bf_source_object *load_file(FILE *file)
 {
     // temp pointer to use when reallocating
     char **tmp_lines = NULL;
 
     const size_t baseline_line_array_length = 1 << 8;
 
-    size_t num_lines_stored = 0;
+    size_t lines_size = 0;
 
-    // initial reallocation, if necessary
-    if (!(*lines_size))
+    // create the source file object
+    bf_source_object *source = create_source_object();
+
+    if (source == NULL)
     {
-        tmp_lines = realloc(*lines, sizeof(char *) * baseline_line_array_length);
-        *lines_size = baseline_line_array_length;
-        if (tmp_lines == NULL)
-        {
-            return NULL;
-        }
-        else if (*lines != tmp_lines)
-        {
-            *lines = tmp_lines;
-        }
-        tmp_lines = NULL;
+        return NULL;
     }
+    source->lines = malloc(sizeof(char *) * baseline_line_array_length);
+
+    if (source->lines == NULL)
+    {
+        free_source_object(source);
+        return NULL;
+    }
+    lines_size += baseline_line_array_length;
 
     size_t *line_size = malloc(sizeof(size_t));
     char **line = malloc(sizeof(char *));
     if (line == NULL || line_size == NULL)
     {
+        free_source_object(source);
         return NULL;
     }
     *line_size = 0;
@@ -106,30 +131,31 @@ char **load_file(char **lines[], size_t *lines_size, FILE *file)
     while (read_line(line, line_size, file) != NULL)
     {
         // store the line in the array
-        (*lines)[num_lines_stored++] = *line;
-        ++(*lines_size);
+        (source->lines)[(source->num_lines)++] = *line;
 
         // create a new line
         line = malloc(sizeof(char *));
         if (line == NULL)
         {
+            free_source_object(source);
             return NULL;
         }
         *line = NULL;
         *line_size = 0;
         // reallocate the lines array if necessary
-        if (num_lines_stored == *lines_size)
+        if (lines_size == source->num_lines)
         {
-            *lines_size += baseline_line_array_length;
-            tmp_lines = realloc(*lines, sizeof(char *) * (*lines_size));
+            lines_size += baseline_line_array_length;
+            tmp_lines = realloc(source->lines, sizeof(char *) * (lines_size));
 
             if (tmp_lines == NULL) // realloc failed
             {
+                free_source_object(source);
                 return NULL;
             }
-            else if (*lines != tmp_lines) // old value of lines was freed
+            else if (source->lines != tmp_lines) // old value of lines was freed
             {
-                *lines = tmp_lines;
+                source->lines = tmp_lines;
             }
             tmp_lines = NULL; // avoid dangling pointer
         }
@@ -138,22 +164,22 @@ char **load_file(char **lines[], size_t *lines_size, FILE *file)
     // read_line returned null pointer but not at EOF
     if (!feof(file))
     {
+        free_source_object(source);
         return NULL;
     }
 
     // reallocate the lines array to contain only the number of lines stored
-    tmp_lines = realloc(*lines, sizeof(char *) * num_lines_stored);
+    tmp_lines = realloc(source->lines, sizeof(char *) * (source->num_lines));
     if (tmp_lines == NULL)
     {
+        free_source_object(source);
         return NULL;
     }
-    else if (*lines != tmp_lines)
+    else if (source->lines != tmp_lines)
     {
-        *lines = tmp_lines;
+        source->lines = tmp_lines;
     }
     tmp_lines = NULL;
-    *lines_size = num_lines_stored;
 
-    return *lines;
-
+    return source;
 }

@@ -2,8 +2,15 @@
 #define UTILS_H_
 
 #include <stdio.h>
+#include <stdlib.h>
 
-char *read_line(char **line, size_t *size, FILE *file);
-char **load_file(char **lines[], size_t *lines_size, FILE *file);
+typedef struct bf_source_object {
+    char **lines;
+    size_t num_lines;
+} bf_source_object;
+
+bf_source_object *load_file(FILE *file);
+
+void free_source_object(bf_source_object *source);
 
 #endif

@@ -26,24 +26,22 @@ int main(int argc, const char *argv[])
             return 1;
         }
 
-        char ***lines = malloc(sizeof(char **));
-        *lines = NULL;
-        size_t *lines_size = malloc(sizeof(size_t));
-        *lines_size = 0;
-        if (load_file(lines, lines_size, file)  == NULL)
+        bf_source_object *source = load_file(file);
+        if (source == NULL)
         {
             fclose(file);
-            // TODO: free line array elements as well
-            free(lines);
-            free(lines_size);
             fprintf(stderr, "Error: Failed to read from source file\n");
             return 1;
         }
-        for (size_t i = 0; i < *lines_size; ++i)
-        {
-            printf("%s\n", (*lines)[i]);
-        }
         fclose(file);
+
+        printf("Number of lines: %zu\n", source->num_lines);
+        for (size_t i = 0; i < source->num_lines; ++i)
+        {
+            printf("%s\n", (source->lines)[i]);
+        }
+
+        free_source_object(source);
     }
     return 0;
 }
