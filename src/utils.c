@@ -122,6 +122,8 @@ bf_source_object *load_file(FILE *file)
     char **line = malloc(sizeof(char *));
     if (line == NULL || line_size == NULL)
     {
+        free(line);
+        free(line_size);
         free_source_object(source);
         return NULL;
     }
@@ -134,12 +136,19 @@ bf_source_object *load_file(FILE *file)
         (source->lines)[(source->num_lines)++] = *line;
 
         // create a new line
-        line = malloc(sizeof(char *));
-        if (line == NULL)
+        char **tmp_line = realloc(line, sizeof(char *));
+        if (tmp_line == NULL)
         {
+            free(line);
+            free(line_size);
             free_source_object(source);
             return NULL;
         }
+        else if (tmp_line != line)
+        {
+            line = tmp_line;
+        }
+        tmp_line = NULL;
         *line = NULL;
         *line_size = 0;
         // reallocate the lines array if necessary
@@ -160,6 +169,10 @@ bf_source_object *load_file(FILE *file)
             tmp_lines = NULL; // avoid dangling pointer
         }
     }
+
+    free(line_size);
+    free(*line);
+    free(line);
 
     // read_line returned null pointer but not at EOF
     if (!feof(file))
