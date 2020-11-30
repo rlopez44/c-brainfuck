@@ -28,7 +28,15 @@ static char *read_line(char **line, size_t *size, FILE *file)
         // expand the line size if necessary
         if (*line == NULL || *size < strlen(*line) + strlen(buffer) + 1)
         {
-            tmp_line = realloc(*line, *size + strlen(buffer) + 1); // account for terminator
+            if (*line == NULL)
+            {
+                tmp_line = calloc(strlen(buffer) + 1, 1);
+            }
+            else
+            {
+                tmp_line = realloc(*line, *size + strlen(buffer) + 1); // account for terminator
+            }
+
             if (tmp_line == NULL)
             {
                 return NULL;
