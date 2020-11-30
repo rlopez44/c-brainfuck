@@ -3,10 +3,15 @@
 
 static char *read_line(char **line, size_t *size, FILE *file)
 {
+    // end of file already reached
+    if (feof(file))
+    {
+        return NULL;
+    }
+
     // temp pointer to use when reallocating
     char *tmp_line = NULL;
 
-    // TODO: fix bug where not all lines are read when *line requires realloc
     const size_t baseline_buffer_length = 1 << 8; // 256
 
     // fixed-size buffer for use with fgets
@@ -22,6 +27,14 @@ static char *read_line(char **line, size_t *size, FILE *file)
         // error reading from file
         if (fgets(buffer, sizeof buffer, file) == NULL)
         {
+            /* error reading from file occurred because last iteration
+             * finished reading chars from file, so we currently
+             * have the full last line of text in the file
+             */
+            if (feof(file))
+            {
+                return *line;
+            }
             return NULL;
         }
 
