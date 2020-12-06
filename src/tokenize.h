@@ -1,5 +1,6 @@
-#ifndef TOKENS_H_
-#define TOKENS_H_
+#ifndef TOKENIZE_H_
+#define TOKENIZE_H_
+#include "utils.h"
 
 enum TOKENS
 {
@@ -13,15 +14,19 @@ enum TOKENS
     R_BRACKET,
 };
 
-static const char TOKEN_CHARS[] = {
-    '>', // increment the data pointer
-    '<', // decrement the data pointer
-    '+', // increment the byte at the data pointer
-    '-', // decrement the byte at the data pointer
-    '.', // output the byte at the data pointer
-    ',', // accept one byte of input, storing its value in the byte at the data pointer
-    '[', // if the byte at the data pointer is nonzero, go to next command, else jump forward to matching ']'
-    ']', // if the byte at the data pointer is zero, go to next command, else jump back to the matching '['
-};
+typedef struct bf_token {
+    int token_type;
+    size_t lineno;
+    size_t col;
+} bf_token;
+
+typedef struct bf_tokens {
+    bf_token **tokens;
+    size_t num_tokens;
+} bf_tokens;
+
+bf_tokens *tokenize(bf_source_object *source);
+
+void free_tokens_object(bf_tokens *tokens);
 
 #endif

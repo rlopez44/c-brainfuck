@@ -35,13 +35,23 @@ int main(int argc, const char *argv[])
         }
         fclose(file);
 
-        printf("Number of lines: %zu\n", source->num_lines);
-        for (size_t i = 0; i < source->num_lines; ++i)
+        bf_tokens *tokens = tokenize(source);
+        if (tokens == NULL)
         {
-            printf("%s\n", (source->lines)[i]);
+            free_source_object(source);
+            fprintf(stderr, "Memory Error\n");
+            return 1;
         }
 
+        for (size_t i = 0; i < tokens->num_tokens; ++i)
+        {
+            int token_type = (tokens->tokens)[i]->token_type;
+            size_t lineno = (tokens->tokens)[i]->lineno;
+            size_t col = (tokens->tokens)[i]->col;
+            printf("Token Type: %d, LineNo: %zu, Col: %zu\n", token_type, lineno, col);
+        }
         free_source_object(source);
+        free_tokens_object(tokens);
     }
     return 0;
 }
