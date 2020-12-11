@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include "tokenize.h"
 #include "utils.h"
+#include "interpreter.h"
 
 int main(int argc, const char *argv[])
 {
@@ -43,13 +44,28 @@ int main(int argc, const char *argv[])
             return 1;
         }
 
-        for (size_t i = 0; i < tokens->num_tokens; ++i)
+        bf_token *unmatched_loop_token = verify_loop_integrity(tokens);
+        if (unmatched_loop_token == NULL)
         {
-            int token_type = (tokens->tokens)[i]->token_type;
-            size_t lineno = (tokens->tokens)[i]->lineno;
-            size_t col = (tokens->tokens)[i]->col;
-            printf("Token Type: %d, LineNo: %zu, Col: %zu\n", token_type, lineno, col);
+            printf("No unmatched loop tokens\n");
         }
+        else
+        {
+            size_t error_line = unmatched_loop_token->lineno;
+            size_t error_col = unmatched_loop_token->col;
+            printf("Syntax error (unmatched bracket) on line #%zu:\n", error_line);
+            printf("%s\n", (source->lines)[error_line - 1]);
+            for (size_t i = 1; i < error_col; ++i)
+            {
+                putchar(' ');
+            }
+            printf("^\n");
+
+            free_source_object(source);
+            free_tokens_object(tokens);
+            return 1;
+        }
+
         free_source_object(source);
         free_tokens_object(tokens);
     }

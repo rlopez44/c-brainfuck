@@ -12,10 +12,10 @@ directories:
 	@mkdir -p ./bin/
 	@mkdir -p ./obj/
 
-brainfuck: obj/main.o obj/utils.o obj/tokenize.o
+brainfuck: obj/main.o obj/utils.o obj/tokenize.o obj/interpreter.o
 	$(CC) -o bin/$@ $^
 
-brainfuck-debug: obj/main.o obj/utils.o obj/tokenize.o
+brainfuck-debug: obj/main.o obj/utils.o obj/tokenize.o obj/interpreter.o
 	$(CC) $(CFLAGS) -o bin/brainfuck $^
 
 obj/%.o: src/%.c
