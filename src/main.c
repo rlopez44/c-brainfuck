@@ -47,7 +47,7 @@ int main(int argc, const char *argv[])
         bf_token *unmatched_loop_token = verify_loop_integrity(tokens);
         if (unmatched_loop_token == NULL)
         {
-            printf("No unmatched loop tokens\n");
+            interpret(tokens);
         }
         else
         {
